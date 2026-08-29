@@ -2,6 +2,11 @@ name: Pruebas unitarias matrix
 on:
   push:
     branches: [ master ]
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   job1:
     name: Pruebas
