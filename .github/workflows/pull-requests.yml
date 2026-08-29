@@ -11,6 +11,11 @@ on:
       - reopened
       - unlocked
     branches: [ master ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   job1:
     name: Pruebas
@@ -39,6 +44,8 @@ jobs:
     needs: job1
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout de repositorio
+        uses: actions/checkout@v2
       - name: automerge
         uses: pascalgn/automerge-action@4536e8847eb62fe2f0ee52c8fa92d17aa97f932f
         env:
