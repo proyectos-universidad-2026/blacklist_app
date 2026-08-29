@@ -24,10 +24,9 @@ jobs:
         run: python -m unittest -v tests/test_persona.py
       - name: Validar resultado con errores
         if: ${{ failure() }}
-        id: imprimir
         env:
           MENSAJE_ERROR: Una o varias pruebas fallaron
-        run: echo "::set-output name=respuesta::${MENSAJE_ERROR}"
+        run: echo "${MENSAJE_ERROR}"
       - name: Validar resultado sin errores
         if: ${{ success() }}
         id: imprimir
