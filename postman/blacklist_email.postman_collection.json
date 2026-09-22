@@ -1,0 +1,400 @@
+{
+  "info": {
+    "_postman_id": "b7c8d9e0-f1a2-4b3c-8d9e-0f1a2b3c4d5e",
+    "name": "blacklist_email",
+    "description": "Colección de las capacidades del servicio blacklist_email:\n- Health check (GET /blacklists/ping)\n- Agregar un email a la lista negra (POST /blacklists)\n- Consultar si un email está en la lista negra (GET /blacklists/<email>)\n\nTambién cubre errores de autenticación (401), validación (400) y conflicto por email duplicado (409).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5001"
+    },
+    {
+      "key": "bearerToken",
+      "value": "test-token"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('runStamp')) {",
+          "  const stamp = Date.now();",
+          "  pm.environment.set('runStamp', String(stamp));",
+          "  pm.environment.set('testEmail', 'newman-' + stamp + '@example.com');",
+          "  pm.environment.set('unknownEmail', 'libre-' + stamp + '@example.com');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "item": [
+        {
+          "name": "GET ping",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Responde pong', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.message).to.eql('pong');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/blacklists/ping"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "POST sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error Unauthorized', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"app_uuid\": \"{{appUuid}}\",\n  \"blocked_reason\": \"Spam\"\n}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        },
+        {
+          "name": "POST con token inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Token inválido', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "  pm.expect(body.message).to.include('Invalid bearer token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "token-invalido",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"app_uuid\": \"{{appUuid}}\",\n  \"blocked_reason\": \"Spam\"\n}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        },
+        {
+          "name": "GET sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error Unauthorized', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/blacklists/{{unknownEmail}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agregar email a blacklist",
+      "item": [
+        {
+          "name": "POST body vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error Bad Request', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Bad Request');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        },
+        {
+          "name": "POST email inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Falla validación de email', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Bad Request');",
+                  "  pm.expect(body.message).to.eql('Validation failed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"no-es-un-email\",\n  \"app_uuid\": \"{{appUuid}}\",\n  \"blocked_reason\": \"Spam\"\n}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        },
+        {
+          "name": "POST crear blacklist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Email agregado', function () {",
+                  "  const body = pm.response.json();",
+                  "  const email = pm.environment.get('testEmail');",
+                  "  pm.expect(body.email).to.eql(email);",
+                  "  pm.expect(body.message).to.include(email);",
+                  "  pm.expect(body.id).to.be.a('string');",
+                  "  pm.expect(body.created_at).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"app_uuid\": \"{{appUuid}}\",\n  \"blocked_reason\": \"Spam activity detected\"\n}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        },
+        {
+          "name": "POST email duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Conflicto por email duplicado', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error).to.eql('Conflict');",
+                  "  pm.expect(body.message).to.include(pm.environment.get('testEmail'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"app_uuid\": \"{{appUuid}}\",\n  \"blocked_reason\": \"Spam activity detected\"\n}"
+            },
+            "url": "{{baseUrl}}/blacklists"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar email en blacklist",
+      "item": [
+        {
+          "name": "GET email en blacklist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Email está en blacklist', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.is_blacklisted).to.eql(true);",
+                  "  pm.expect(body.email).to.eql(pm.environment.get('testEmail'));",
+                  "  pm.expect(body.blocked_reason).to.eql('Spam activity detected');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/blacklists/{{testEmail}}"
+          }
+        },
+        {
+          "name": "GET email no está en blacklist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Email no está en blacklist', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.is_blacklisted).to.eql(false);",
+                  "  pm.expect(body.email).to.eql(pm.environment.get('unknownEmail'));",
+                  "  pm.expect(body.blocked_reason).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/blacklists/{{unknownEmail}}"
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}
