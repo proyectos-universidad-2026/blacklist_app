@@ -6,7 +6,7 @@ Este documento describe el paso a paso para cubrir las capacidades del servicio 
 
 ## 1. Capacidades del servicio
 
-El API Flask vive en `blacklist_app/src/routes/blacklist_router.py` y expone tres operaciones:
+El API Flask vive en `src/routes/blacklist_router.py` y expone tres operaciones:
 
 | Método | Ruta | Auth Bearer | Descripción |
 | --- | --- | --- | --- |
@@ -53,7 +53,7 @@ npm install -g newman
 pip install flask flask-sqlalchemy flask-cors marshmallow python-dotenv
 ```
 
-Levantar el servicio (SQLite, sin Postgres) desde `blacklist_app/`:
+Levantar el servicio (SQLite, sin Postgres) desde la raíz del repositorio:
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///local_newman.db"
