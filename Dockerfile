@@ -38,8 +38,8 @@ COPY --from=base /usr/local/bin /usr/local/bin
 COPY --from=base /app /app
 COPY ./src /app/src
 
-# Crea el usuario y el grupo noroot
-RUN groupadd -r noroot && useradd -r -g noroot noroot
+# Crea el usuario y el grupo noroot con UID/GID fijo (requerido por runAsNonRoot en Kubernetes)
+RUN groupadd -r -g 10001 noroot && useradd -r -u 10001 -g noroot noroot
 
 # Le damos la propiedad de la carpeta /app al usuario noroot
 RUN chown -R noroot:noroot /app
